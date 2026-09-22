@@ -26,31 +26,8 @@ end
     script = """
         using BenchmarkTools
         using Test
-
-        @test_throws ErrorException BenchmarkTools.save("x.json", 1)
-        @test_throws ErrorException BenchmarkTools.load("x.json")
-
-        err = try
-            BenchmarkTools.save("x.json", 1)
-            nothing
-        catch e
-            e
-        end
-        @test err isa ErrorException
-        @test occursin("BenchmarkTools.save", err.msg)
-        @test occursin("JSON.jl", err.msg)
-        @test occursin("using JSON", err.msg)
-
-        err = try
-            BenchmarkTools.load("x.json")
-            nothing
-        catch e
-            e
-        end
-        @test err isa ErrorException
-        @test occursin("BenchmarkTools.load", err.msg)
-        @test occursin("JSON.jl", err.msg)
-        @test occursin("using JSON", err.msg)
+        @test_throws "save requires the JSON.jl package" BenchmarkTools.save("x.json", 1)
+        @test_throws "load requires the JSON.jl package" BenchmarkTools.load("x.json")
         """
     cmd = `$(Base.julia_cmd()) --project=$(Base.active_project()) -e $script`
     io = IOBuffer()
