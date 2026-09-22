@@ -1,6 +1,7 @@
 module SerializationTests
 
 using BenchmarkTools
+using JSON
 using Test
 
 function eq(x::T, y::T) where {T<:Union{values(BenchmarkTools.SUPPORTED_TYPES)...}}
