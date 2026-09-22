@@ -19,6 +19,46 @@ function withtempdir(f::Function)
     return nothing
 end
 
+@testset "save/load error when JSON is not loaded" begin
+    # This must run in a fresh process: the rest of this file does `using JSON`,
+    # which triggers the BenchmarkToolsJSONExt extension for the remainder of
+    # this process, so the "not loaded" error path can no longer be observed here.
+    script = """
+        using BenchmarkTools
+        using Test
+
+        @test_throws ErrorException BenchmarkTools.save("x.json", 1)
+        @test_throws ErrorException BenchmarkTools.load("x.json")
+
+        err = try
+            BenchmarkTools.save("x.json", 1)
+            nothing
+        catch e
+            e
+        end
+        @test err isa ErrorException
+        @test occursin("BenchmarkTools.save", err.msg)
+        @test occursin("JSON.jl", err.msg)
+        @test occursin("using JSON", err.msg)
+
+        err = try
+            BenchmarkTools.load("x.json")
+            nothing
+        catch e
+            e
+        end
+        @test err isa ErrorException
+        @test occursin("BenchmarkTools.load", err.msg)
+        @test occursin("JSON.jl", err.msg)
+        @test occursin("using JSON", err.msg)
+        """
+    cmd = `$(Base.julia_cmd()) --project=$(Base.active_project()) -e $script`
+    io = IOBuffer()
+    ok = success(pipeline(cmd; stdout=io, stderr=io))
+    ok || print(String(take!(io)))
+    @test ok
+end
+
 @testset "Successful (de)serialization" begin
     b = @benchmarkable sin(1)
     tune!(b)
